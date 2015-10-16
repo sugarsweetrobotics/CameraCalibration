@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include "CameraCalibration.h"
 
+static CameraCalibration *pCap;
 
 void MyModuleInit(RTC::Manager* manager)
 {
@@ -28,6 +29,7 @@ void MyModuleInit(RTC::Manager* manager)
     abort();
   }
 
+  pCap = dynamic_cast<CameraCalibration*>(comp);
   // Example
   // The following procedure is examples how handle RT-Components.
   // These should not be in this function.
@@ -88,7 +90,31 @@ int main (int argc, char** argv)
 
   // run the manager in blocking mode
   // runManager(false) is the default.
-  manager->runManager();
+
+#ifdef WIN32
+  manager->runManager(false);
+#elif __APPLE__
+  manager->runManager(true);
+  while(!pCap);
+
+  bool active_flag = false;
+  while(pCap->isAlive()) {
+    bool flag = pCap->isActive();
+    if (!active_flag && flag) { // Rising Edge
+      pCap->onInitCalib(0);
+    }
+    if (flag) {
+      pCap->onProcess(0);
+    }
+    if (active_flag && !flag) { // Falling Edge
+      pCap->onFiniCalib(0);
+    }
+    active_flag = flag;
+  }
+  
+#else // Linux
+  manager->runManager(false);
+#endif
 
   // If you want to run the manager in non-blocking mode, do like this
   // manager->runManager(true);

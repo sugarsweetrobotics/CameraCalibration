@@ -17,20 +17,21 @@ link_directories(${OPENRTM_LIBRARY_DIRS})
 link_directories(${OMNIORB_LIBRARY_DIRS})
 link_directories(${OPENCV_LIBRARY_DIRS})
 
-add_library(${PROJECT_NAME_LOWER} ${LIB_TYPE} ${comp_srcs} ${ALL_IDL_SRCS})
+add_library(${PROJECT_NAME} ${LIB_TYPE} ${comp_srcs} ${ALL_IDL_SRCS})
+set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 set_source_files_properties(${ALL_IDL_SRCS} PROPERTIES GENERATED 1)
-add_dependencies(${PROJECT_NAME_LOWER} ALL_IDL_TGT)
-target_link_libraries(${PROJECT_NAME_LOWER} ${OPENRTM_LIBRARIES} ${OpenCV_LIBS})
+add_dependencies(${PROJECT_NAME} ALL_IDL_TGT)
+target_link_libraries(${PROJECT_NAME} ${OPENRTM_LIBRARIES} ${OpenCV_LIBS})
 
-add_executable(${PROJECT_NAME_LOWER}comp ${standalone_srcs})
-target_link_libraries(${PROJECT_NAME_LOWER}comp ${PROJECT_NAME_LOWER})
+add_executable(${PROJECT_NAME}Comp ${standalone_srcs} ${comp_srcs} ${ALL_IDL_SRCS})
+target_link_libraries(${PROJECT_NAME}Comp ${OPENRTM_LIBRARIES} ${OpenCV_LIBS})
 
-install(TARGETS ${PROJECT_NAME_LOWER} ${PROJECT_NAME_LOWER}comp
-    EXPORT ${PROJECT_NAME_LOWER}
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}Comp
+    EXPORT ${PROJECT_NAME}
     RUNTIME DESTINATION ${BIN_INSTALL_DIR} COMPONENT component
     LIBRARY DESTINATION ${LIB_INSTALL_DIR} COMPONENT component
     ARCHIVE DESTINATION ${LIB_INSTALL_DIR} COMPONENT component)
-install(EXPORT ${PROJECT_NAME_LOWER}
-    DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_NAME_LOWER}
-    FILE ${PROJECT_NAME_LOWER}Depends.cmake)
+install(EXPORT ${PROJECT_NAME}
+    DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_NAME}
+    FILE ${PROJECT_NAME}Depends.cmake)
 

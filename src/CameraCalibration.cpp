@@ -16,9 +16,9 @@ static const char* cameracalibration_spec[] =
     "implementation_id", "CameraCalibration",
     "type_name",         "CameraCalibration",
     "description",       "Camera calibration component using OpenCV 2.4.8",
-    "version",           "1.0.0",
-    "vendor",            "Kenichi Ohara, Meijo University",
-    "category",          "ImageProcessin",
+    "version",           "1.0.1",
+    "vendor",            "Kenichi Ohara, Meijo University, Yuki Suga, Sugar Sweet Robotics",
+    "category",          "ImageProcessing",
     "activity_type",     "PERIODIC",
     "kind",              "DataFlowComponent",
     "max_instance",      "1",
@@ -66,6 +66,7 @@ CameraCalibration::~CameraCalibration()
 
 RTC::ReturnCode_t CameraCalibration::onInitialize()
 {
+  is_alive = true;
   // Registration: InPort/OutPort/Service
   // <rtc-template block="registration">
   // Set InPort buffers
@@ -103,12 +104,13 @@ RTC::ReturnCode_t CameraCalibration::onInitialize()
   return RTC::RTC_OK;
 }
 
-/*
+
 RTC::ReturnCode_t CameraCalibration::onFinalize()
 {
+  is_alive = false;
   return RTC::RTC_OK;
 }
-*/
+
 
 /*
 RTC::ReturnCode_t CameraCalibration::onStartup(RTC::UniqueId ec_id)
@@ -126,6 +128,19 @@ RTC::ReturnCode_t CameraCalibration::onShutdown(RTC::UniqueId ec_id)
 
 RTC::ReturnCode_t CameraCalibration::onActivated(RTC::UniqueId ec_id)
 {
+  is_active = true;
+
+#ifdef WIN32
+  return onInitCalib(ec_id);
+#elif __APPLE__
+  return RTC::RTC_OK;
+#else
+  return onInitCalib(ec_id);
+#endif
+  return RTC::RTC_OK;
+}
+
+RTC::ReturnCode_t CameraCalibration::onInitCalib(RTC::UniqueId ec_id) {
 	//Show the calibration setting
 	printf("======================Camera calibration setting================\n");
 	printf("Image number                               : %d\n", m_image_num);
@@ -175,6 +190,19 @@ RTC::ReturnCode_t CameraCalibration::onActivated(RTC::UniqueId ec_id)
 
 RTC::ReturnCode_t CameraCalibration::onDeactivated(RTC::UniqueId ec_id)
 {
+  is_active = false;
+#ifdef WIN32
+  return onFiniCalib(ec_id);
+#elif __APPLE__
+  return RTC::RTC_OK;
+#else
+  return onFiniCalib(ec_id);
+#endif
+  return RTC::RTC_OK;
+}
+
+
+RTC::ReturnCode_t CameraCalibration::onFiniCalib(RTC::UniqueId ec_id) {
 	//Close the window for live image
 	cvDestroyWindow("Live image");
 	cvDestroyWindow("Corner Detection Result");
@@ -194,9 +222,7 @@ RTC::ReturnCode_t CameraCalibration::onDeactivated(RTC::UniqueId ec_id)
 	return RTC::RTC_OK;
 }
 
-
-RTC::ReturnCode_t CameraCalibration::onExecute(RTC::UniqueId ec_id)
-{
+RTC::ReturnCode_t CameraCalibration::onProcess(RTC::UniqueId ec_id) {
 	//Inport data check
 	if(m_InImageIn.isNew())
 	{
@@ -304,6 +330,18 @@ RTC::ReturnCode_t CameraCalibration::onExecute(RTC::UniqueId ec_id)
 		}
 	}
 	return RTC::RTC_OK;
+}
+
+RTC::ReturnCode_t CameraCalibration::onExecute(RTC::UniqueId ec_id)
+{
+#ifdef WIN32
+  return onProcess(0);
+#elif __APPLE__
+  return RTC::RTC_OK;
+#else
+  return onProcess(0);
+#endif
+  return RTC::RTC_OK;
 }
 
 /*
